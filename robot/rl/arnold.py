@@ -1,7 +1,7 @@
 import numpy as np
 from dataclasses import dataclass
-import matplotlib.pyplot as plt
-
+# import matplotlib.pyplot as plt
+import pylab as p
 @dataclass
 class ControlInput():
     """ struct def for the steps in Arnold
@@ -51,12 +51,16 @@ class Arnold():
 
     def step(self,controlinput):
         left_len = controlinput.left_speed*self.wheel_radius*controlinput.time_step
-        
         right_len = controlinput.right_speed*self.wheel_radius*controlinput.time_step
         
         frac = np.sqrt(4*self.width**2 - (left_len - right_len)**2)/2/self.width
+        
         right_ang = np.arcsin(frac)
-        deltah = right_ang - np.pi/2
+        if left_len >= right_len:
+            deltah = right_ang - np.pi/2
+        else:
+            deltah = -right_ang + np.pi/2
+        # print(deltah)
         trav_dist = (left_len + right_len)/2
         dx = trav_dist*np.cos(deltah + controlinput.heading)
         dy = trav_dist*np.sin(deltah + controlinput.heading)
@@ -67,8 +71,8 @@ if __name__ == '__main__':
     inp = ControlInput
     inp.heading = 0
     inp.time_step = 1
-    inp.left_speed = 0.1
-    inp.right_speed = -0.05
+    inp.left_speed = -0.1
+    inp.right_speed = 0.1
 
     x = 0
     y = 0
@@ -80,3 +84,10 @@ if __name__ == '__main__':
         x += dx
         y += dy
         print('New position: (' + str(x) + ',' + str(y) + ',' + str(inp.heading) + ')')
+        # p.arrow( x, y, np.cos(inp.heading), np.sin(inp.heading), fc="k", ec="k",head_width=0.05, head_length=0.1 )
+        # p.show()
+
+
+
+
+
