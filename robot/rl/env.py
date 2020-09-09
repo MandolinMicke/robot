@@ -62,11 +62,9 @@ class Maze(Env):
             reward = 1
 
         control = arnold.ControlInput(self.heading, 
-                                      0.1, 
-                                      np.sign(action[0]), 
-                                      np.sign(action[1]),
-                                      np.abs(action[0]),
-                                      np.abs(action[1]))
+                                      1, # time step
+                                      action[0],
+                                      action[1])
 
         # Move the agent
         dx, dy, deltah = self.vehicle.step(control)
