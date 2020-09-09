@@ -18,20 +18,19 @@ class Simple():
         self.max_dist = max_dist
         self.set_vehicle_pos(0, 0, 0)
         
-    def set_vehicle_pos(self, x, y, heading):
+    def set_vehicle_pos(self, position, heading):
         """Update sensor with vehicle position.
 
         Args:
-            x (float): Vehicle x position in meters.
-            y (float): Vehicle y position in meters.
+            position (Point): Vehicle x, y position in meters.
             heading (float): Vehicle heading in radians.
         """
-        self.position = Point([x, y])
+        self.position = position
         heading = heading+self.heading_rel
-        self.line = LineString([[x+self.min_dist*np.cos(heading),
-                                 y+self.min_dist*np.sin(heading)],
-                                [x+self.max_dist*np.cos(heading), 
-                                 y+self.max_dist*np.sin(heading)]])
+        self.line = LineString([[self.position.x+self.min_dist*np.cos(heading),
+                                 self.position.y+self.min_dist*np.sin(heading)],
+                                [self.position.x+self.max_dist*np.cos(heading), 
+                                 self.position.y+self.max_dist*np.sin(heading)]])
 
     def distance(self, maze):
         """Get distance from sensor to labyrinth.

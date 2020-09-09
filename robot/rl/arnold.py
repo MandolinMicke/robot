@@ -10,10 +10,10 @@ class ControlInput():
         ----------
             heading (float): rad, heading at start point
             time_step (float): s, time step of step
-            left_speed (float): 0:1 rad/s speed of left motor
             left_dir (int): -1 back, 0 standstill, 1 forward
-            right_speed (float): 0:1 rad/s speed of right motor
             right_dir (int): -1 back, 0 standstill, 1 forward
+            left_speed (float): 0:1 rad/s speed of left motor
+            right_speed (float): 0:1 rad/s speed of right motor
     """
 
 
