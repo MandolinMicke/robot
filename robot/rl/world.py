@@ -1,9 +1,12 @@
-import arnold
+import numpy as np
 from gym import spaces, Env
 from shapely.geometry import LineString, Point
 
+import arnold
+
+
 class Maze(Env):
-    GOAL_DIST_FOR_SUCCESS = 0.1
+    GOAL_DIST_FOR_SUCCESS = 0.2
 
     """Single asset env with immediate reward. Simplest case."""
     def __init__(self, vehicle, sensors, start_pos, start_heading, maze, goal):
@@ -17,15 +20,15 @@ class Maze(Env):
             maze (LineString): Labyrinth of walls.
             goal (LineString): Finish line.
         """
-        self.observation_space  = spaces.Box(0, # min value
-                                            sensors[0].max_dist, # max value
-                                            shape=len(sensors),
-                                            dtype=np.float32)
+        self.observation_space = spaces.Box(0, # min value
+                                           sensors[0].max_dist, # max value
+                                           shape=(len(sensors),),
+                                           dtype=np.float32)
 
-        self.action_space       = spaces.Box(-1.0,
-                                             +1.0,
-                                             shape=2,
-                                             dtype=np.float32)
+        self.action_space = spaces.Box(-1.0,
+                                       +1.0,
+                                       shape=(2,),
+                                       dtype=np.float32)
 
         self.vehicle = vehicle
         self.sensors = sensors
@@ -68,27 +71,26 @@ class Maze(Env):
 
         # Move the agent
         dx, dy, deltah = self.vehicle.step(control)
-        self.position.x += dx
-        self.position.y += dy
+        self.position = Point(self.position.x+dx, self.position.y+dy)
         self.heading += deltah
 
         observation = []
         goal_distance = []
         for sensor in self.sensors:
-            sensor.set_vehicle_position(self.position, self.heading)
+            sensor.set_vehicle_pos(self.position, self.heading)
 		
             # The agent observes the environment through its sensors
             observation.append(sensor.distance(self.maze))
 
-            # For the agent to finish, the goal must be visible with the sensors.
-            # It is not acceptable to be close to the goal through a wall.
-            # But this is not implemented yet. Right now we only do closest distance
-            # to any sensor (MVP).
-            dist = sensor.distance(self.goal)
-            if dist > 0:
-                goal_distance.append(dist)
+            # # For the agent to finish, the goal must be visible with the sensors.
+            # # It is not acceptable to be close to the goal through a wall.
+            # # But this is not implemented yet. Right now we only do closest distance
+            # # to any sensor (MVP).
+            # dist = sensor.distance(self.goal)
+            # if dist > 0:
+            #     goal_distance.append(dist)
 
-        if goal_distance and np.min(goal_distance) < self.GOAL_DIST_FOR_SUCCESS:
+        if self.position.distance(self.goal) < self.GOAL_DIST_FOR_SUCCESS:
             reward = 100
             done = True
         else:
@@ -106,7 +108,7 @@ class Maze(Env):
         self.position = self.start_pos
         self.heading = self.start_heading
         for sensor in self.sensors:
-            sensor.set_vehicle_position(self.position, self.heading)
+            sensor.set_vehicle_pos(self.position, self.heading)
 
     def render(self, mode=None):
         """Renders the environment.

@@ -16,7 +16,10 @@ class Simple():
         self.heading_rel = heading_rel
         self.min_dist = min_dist
         self.max_dist = max_dist
-        self.set_vehicle_pos(0, 0, 0)
+        self.set_vehicle_pos(Point(0, 0), 0)
+
+    def __repr__(self):
+        return f'Sensor {self.position} and {self.line}'
         
     def set_vehicle_pos(self, position, heading):
         """Update sensor with vehicle position.
