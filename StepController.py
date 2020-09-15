@@ -35,8 +35,8 @@ def Communicator(shared_data):
         elif coms.angle(shared_data.name) in command:
             shared_data.angle = float(command.split(':')[1])
 
-def MotorController(shared_data,pins):
-    motor = StepMotor()
+def MotorController(shared_data,pins=None):
+    motor = StepMotor(pins)
     motor.sleeptime = 0
     while(shared_data.run):
         if shared_data.angle != 0:
@@ -55,9 +55,14 @@ def MotorController(shared_data,pins):
 
 
 if __name__ == '__main__':
-    shared_data = SharedData('motor1')
-    shared_data.speed = 0.1
+    shared_data_1 = SharedData('motor1')
+    shared_data_1.speed = 0.1
 
-    Thread(target=MotorController,args=(shared_data,[])).start()
-    Thread(target=Communicator,args=(shared_data,)).start()
-    # Communicator(shared_data)
+    Thread(target=MotorController,args=(shared_data_1,[2,3,4,17])).start()
+    Thread(target=Communicator,args=(shared_data_1,)).start()
+    
+    shared_data_2 = SharedData('motor2')
+    shared_data_2.speed = 0.1
+
+    Thread(target=MotorController,args=(shared_data_2,[22,10,9,11])).start()
+    Thread(target=Communicator,args=(shared_data_2,)).start()
