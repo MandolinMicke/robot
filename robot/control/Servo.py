@@ -3,41 +3,51 @@ import RPi.GPIO as gp
 import time
 
 import numpy as np
-class motorcontroller():
-    def __init__(self):
+
+
+class ServoMotorController():
+    def __init__(self,servopin=3):
 
         gp.setmode(gp.BCM)
 
-        gp.setup(3,gp.OUT)
+        gp.setup(servopin,gp.OUT)
         period = 20
         t0 = 1
         t180 = 2
 
         self.b = 2.1 #t0/20*1000
         self.a = 3.5 #t180/20*1000 - self.b
-        print(self.a)
-        print(self.b)
+        # print(self.a)
+        # print(self.b)
 
         self.pwm = gp.PWM(3, 20); #1/period*1000)
         self.pwm.start(1)
 
-    def setdir(self,direction):
-        duty = self.a/180*direction + self.b
-        print(duty)
-        self.pwm.ChangeDutyCycle(duty)
-        time.sleep(0) 
+        self.setduty(1)
+        time.sleep(1)
+    # def setdir(self,direction):
+    #     duty = self.a/180*direction + self.b
+    #     print(duty)
+    #     self.pwm.ChangeDutyCycle(duty)
+    #     time.sleep(0) 
 
     def setduty(self,duty):
         self.pwm.ChangeDutyCycle(duty)
-        time.sleep(1) 
+         
+    def setangle(self,angle):
+        duty = 3.4/np.pi*angle + 1 + np.pi/2
+        # print(duty)
+        self.setduty(duty)
+
     def teardown(self):
         gp.cleanup()
 
 if __name__ == "__main__":
-    mc = motorcontroller()
-
-    for direction in np.arange(1, 4.6, 0.2):
-        mc.setduty(direction)   
+    mc = ServoMotorController()
+    time.sleep(0.5)
+    for direction in np.arange(-np.pi/2, np.pi/2+0.3, 0.3):
+        mc.setangle(direction)  
+        time.sleep(0.15) 
         print(direction)
 
     # mc.setdir(-180)
