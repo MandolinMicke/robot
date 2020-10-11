@@ -2,10 +2,11 @@
 from Communication import Network
 from stepper import StepMotor
 import Commands as coms
-
+from numpy import sign
 import time
 from threading import Thread
 
+import RPi.GPIO as gp
 
 class SharedData():
     def __init__(self,name):
@@ -15,54 +16,77 @@ class SharedData():
         self.speed = 0
         self.run = True
 
-def Communicator(shared_data):
-    network = Network(shared_data.name,subscribtions=coms.get_controller_subs(shared_data.name))
+def calc_speed(value):
+    MINSPEED = 0.01
+    MAXSPEED = 0.0008
+    if value > 0:
+        newspeed = (MAXSPEED - MINSPEED)* value + MINSPEED
+        direction = 1
+        if newspeed < MAXSPEED:
+            newspeed = MAXSPEED
+    elif value < 0:
+        newspeed = (MAXSPEED - MINSPEED)* value - MINSPEED
+        # print(newspeed)
+        direction = -1
+        if newspeed < -MAXSPEED:
+            newspeed = -MAXSPEED
 
-    network.setuplistner()    
+    else:
+        newspeed = 0
+        direction = 0
+
+    return newspeed, direction
+
+def Communicator(shared_data):
+    # network = Network(shared_data.name,subscribtions=coms.get_controller_subs(shared_data.name))
+    network = Network(shared_data.name,subscribtions=[''])
+
+    network.setuplistner()
     while(shared_data.run):
-        print('listening...')
+        # print('listening...')
         command = network.listen()
-        print(command)
+        # print(command)
         if command == coms.shutdown():
             shared_data.run = False
-
+        
         elif coms.speed(shared_data.name) in command:
-            shared_data.speed = float(command.split(':')[1])
-
-        elif coms.direction(shared_data.name) in command:
-            shared_data.direction = int(command.split(':')[1])
-
-        elif coms.angle(shared_data.name) in command:
-            shared_data.angle = float(command.split(':')[1])
+            speed, direction = calc_speed(float(command.split(':')[1]))
+            shared_data.speed = abs(speed)
+            shared_data.direction = direction
 
 def MotorController(shared_data,pins=None):
     motor = StepMotor(pins)
     motor.sleeptime = 0
+    motor.pause()
     while(shared_data.run):
-        if shared_data.angle != 0:
-            motor.sleeptime = shared_data.speed
-            motor.turn_rad(shared_data.angle)
-            motor.sleeptime = 0
-            # print('turning to angle: ' + str(shared_data.angle))
-            shared_data.angle = 0
-            
-        elif shared_data.direction != 0:
+
+        if shared_data.direction != 0:
             motor.do_step(shared_data.direction)
             # print('stepping: ' + str(shared_data.direction))
+        else:
+            motor.pause()
             
         
         time.sleep(shared_data.speed)
-
-
-if __name__ == '__main__':
-    shared_data_1 = SharedData('motor1')
-    shared_data_1.speed = 0.1
-
-    Thread(target=MotorController,args=(shared_data_1,[2,3,4,17])).start()
-    Thread(target=Communicator,args=(shared_data_1,)).start()
+    motor.pause()
     
-    shared_data_2 = SharedData('motor2')
-    shared_data_2.speed = 0.1
+if __name__ == '__main__':
 
-    Thread(target=MotorController,args=(shared_data_2,[22,10,9,11])).start()
-    Thread(target=Communicator,args=(shared_data_2,)).start()
+    shared_data_1 = SharedData('motor1')
+    shared_data_2 = SharedData('motor2')
+
+    threads = []
+    threads.append(Thread(target=MotorController,args=(shared_data_1,[6,13,19,26])))
+
+    threads.append(Thread(target=Communicator,args=(shared_data_1,)))
+    
+    threads.append(Thread(target=MotorController,args=(shared_data_2,[12,16,20,21])))
+    threads.append(Thread(target=Communicator,args=(shared_data_2,)))
+
+    for i in threads:
+        i.start()
+
+    for i in threads:
+        i.join()
+    
+    gp.cleanup()
