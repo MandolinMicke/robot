@@ -78,13 +78,15 @@ class UltraSoundSensor():
         time.sleep(0.00001)
         gpio.output(self.triggerpin,False)
 
+        # pulse_start = time.time()
+        # pulse_end = time.time()
         while gpio.input(self.echopin) == 0:
             pulse_start = time.time()
         while gpio.input(self.echopin) == 1:
             pulse_end = time.time()
 
         pulse_duration = pulse_end - pulse_start
-
+        # print(pulse_duration)
         distance = pulse_duration * 171.50
 
         return round(distance,3)
@@ -94,10 +96,25 @@ class UltraSoundSensor():
         """
         gpio.cleanup()
 
+
+    def teststuffs(self):
+        for i in range(20):
+            gpio.output(self.triggerpin,True)
+            time.sleep(1)
+            gpio.output(self.triggerpin,False)
+            time.sleep(1)
+
+
+
+        
+
 if __name__ == '__main__':
-    uss = UltraSoundSensor(24,23)
-    for i in range(10):
-        print(uss.get_distance())
-        time.sleep(0.01)
+    uss = UltraSoundSensor(11,9)
+    # uss = UltraSoundSensor(4,3)
+    # uss.teststuffs()
+    print(uss.get_mean_distance())
+    # for i in range(10):
+    #     print(uss.get_distance())
+    #     time.sleep(0.01)
     uss.teardown()
 

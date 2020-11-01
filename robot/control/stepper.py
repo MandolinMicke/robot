@@ -57,12 +57,12 @@ class Steps():
         return self.emptystep
 
 class StepMotor():
-    def __init__(self,pins = [2,3,4,17]):
+    def __init__(self,pins = [12,16,20,21]):
         gp.setmode(gp.BCM)
         self.pins = pins
         self.stepper = Steps()
-        self.sleeptime = 0.0005
-        
+        # self.sleeptime = 0.0007
+        self.sleeptime = 0.01
         for i in self.pins:
             gp.setup(i,gp.OUT)
 
@@ -76,7 +76,7 @@ class StepMotor():
     def do_steps(self,direction,steps):
         for i in range(steps):
             self.do_step(direction)
-
+            
     def turn_deg(self,angle):
         self.turn_rad(angle/180*np.pi)
 
@@ -87,18 +87,22 @@ class StepMotor():
             direction = 1
 
         steps = round(angle*400/np.pi)
+        
         self.do_steps(direction,steps)
     
     def set_speed(self,sleeptime):
         self.sleeptime = sleeptime
 
-    
+    def pause(self):
+        for i in self.stepper.get_empty_step():
+            gp.output(self.pins[i],i)
+
     def teardown(self):
         gp.cleanup()
 
 if __name__ == '__main__':
-    sm = StepMotor()
-
+    # sm = StepMotor([6,13,19,26])
+    sm = StepMotor([12,16,20,21])
     # sm.do_steps(1,200)
     sm.turn_deg(1080)
     

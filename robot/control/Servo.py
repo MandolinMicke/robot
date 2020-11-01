@@ -6,7 +6,7 @@ import numpy as np
 
 
 class ServoMotorController():
-    def __init__(self,servopin=3):
+    def __init__(self,servopin=2):
 
         gp.setmode(gp.BCM)
 
@@ -20,7 +20,7 @@ class ServoMotorController():
         # print(self.a)
         # print(self.b)
 
-        self.pwm = gp.PWM(3, 20); #1/period*1000)
+        self.pwm = gp.PWM(servopin, 20); #1/period*1000)
         self.pwm.start(1)
 
         self.setduty(1)
@@ -43,9 +43,10 @@ class ServoMotorController():
         gp.cleanup()
 
 if __name__ == "__main__":
-    mc = ServoMotorController()
+    mc = ServoMotorController(10)
     time.sleep(0.5)
-    for direction in np.arange(-np.pi/2, np.pi/2+0.3, 0.3):
+    # mc.setangle(0)  
+    for direction in np.arange(-np.pi/2, np.pi/2+0.3, 0.2):
         mc.setangle(direction)  
         time.sleep(0.15) 
         print(direction)

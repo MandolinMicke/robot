@@ -36,7 +36,7 @@ class Network():
         """
         if self.pubname == None:
             raise NameError("publisher needs a proper name to start publishing")
-        # create publisher        
+        # create publisher
         
         address = 'tcp://' + sv.nodes[self.pubname][0] + ':' + str(sv.nodes[self.pubname][1])
         tries = 0
