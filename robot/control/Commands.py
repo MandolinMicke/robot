@@ -11,3 +11,8 @@ def get_controller_subs(controllername):
     return [shutdown(),
     speed(controllername)]
 
+def sensor_distance(distance=None,angle=None,std=None):
+    basestr = 'distance: '
+    if distance != None:
+        basestr += str(distance) + ',' + str(angle) + ',' + str(std)
+    return basestr

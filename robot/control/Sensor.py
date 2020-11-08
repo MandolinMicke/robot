@@ -59,7 +59,10 @@ class UltraSoundSensor():
         """
         dists = []
         for i in range(nums):
-            dists.append(self.get_distance())
+            new_dist = None
+            while new_dist == None:
+                new_dist = self.get_distance()
+            dists.append(new_dist)
             time.sleep(delay)
         mean = np.mean(dists)
         std = np.std(dists)
@@ -78,10 +81,16 @@ class UltraSoundSensor():
         time.sleep(0.00001)
         gpio.output(self.triggerpin,False)
 
-        # pulse_start = time.time()
-        # pulse_end = time.time()
+        deadlocktime = time.time()
+        pulse_start = time.time()
+        pulse_end = time.time()
+        
         while gpio.input(self.echopin) == 0:
             pulse_start = time.time()
+            if time.time() - deadlocktime >0.5:
+
+                return None
+
         while gpio.input(self.echopin) == 1:
             pulse_end = time.time()
 

@@ -6,8 +6,17 @@ import numpy as np
 
 
 class ServoMotorController():
-    def __init__(self,servopin=2):
+    """ ServoMotorController controlls a servomotor of type SG90
 
+        Parameters
+        ----------
+            servopin (int): the gpio (BCM) connected to the servo
+
+    """
+    def __init__(self,servopin=2):
+        """ initalize the ServoMotorController
+
+        """
         gp.setmode(gp.BCM)
 
         gp.setup(servopin,gp.OUT)
@@ -17,33 +26,44 @@ class ServoMotorController():
 
         self.b = 2.1 #t0/20*1000
         self.a = 3.5 #t180/20*1000 - self.b
-        # print(self.a)
-        # print(self.b)
-
+    
         self.pwm = gp.PWM(servopin, 20); #1/period*1000)
         self.pwm.start(1)
 
         self.setduty(1)
         time.sleep(1)
-    # def setdir(self,direction):
-    #     duty = self.a/180*direction + self.b
-    #     print(duty)
-    #     self.pwm.ChangeDutyCycle(duty)
-    #     time.sleep(0) 
-
+    
     def setduty(self,duty):
+        """ sets the duty cycle to turn the servo motor
+
+            Parameters
+            ----------
+                duty (float): the new duty
+
+        """
         self.pwm.ChangeDutyCycle(duty)
          
     def setangle(self,angle):
+        """ Sets an angle to the servo motor
+
+            Parameters
+            ----------
+                angle (float): the angle in radians (-pi/2:pi/2)
+        
+        """
+
         duty = 3.4/np.pi*angle + 1 + np.pi/2
         # print(duty)
         self.setduty(duty)
 
     def teardown(self):
+        """ cleans up the gpio
+
+        """
         gp.cleanup()
 
 if __name__ == "__main__":
-    mc = ServoMotorController(10)
+    mc = ServoMotorController(25)
     time.sleep(0.5)
     # mc.setangle(0)  
     for direction in np.arange(-np.pi/2, np.pi/2+0.3, 0.2):
