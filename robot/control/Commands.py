@@ -34,19 +34,19 @@ def sensor_distance(distance=None,angle=None,std=None):
 def sensor_mode(mode=None):
     basestr = 'mode: ' 
     if mode:
-        basestr += mode
+        basestr += str(mode)
     return basestr
 
 def sensor_resolution(res=None):
     basestr = 'resolution: ' 
     if res:
-        basestr += res
+        basestr += str(res)
     return basestr   
 
 def sensor_fov(fov=None):
     basestr = 'fov: ' 
     if fov:
-        basestr += fov
+        basestr += str(fov)
     return basestr
 
 
