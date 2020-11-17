@@ -9,10 +9,10 @@ network = Network('own_master')
 
 # time.sleep(1)
 
-# network.send(coms.direction('motor1',-1))
 
-network.send(coms.speed('motor1',0.001))
-
-# network.send(coms.angle('motor1',3.14))
-network.send(coms.angle('motor1',3*3.14))
 # network.send(coms.shutdown())
+
+
+
+
+network.send(coms.sensor_mode('full'))

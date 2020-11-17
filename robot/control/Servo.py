@@ -63,12 +63,15 @@ class ServoMotorController():
         gp.cleanup()
 
 if __name__ == "__main__":
-    mc = ServoMotorController(25)
+    # mc = ServoMotorController(2)
+    # mc = ServoMotorController(25)
+    # mc = ServoMotorController(17)
+    mc = ServoMotorController(10)
     time.sleep(0.5)
     # mc.setangle(0)  
     for direction in np.arange(-np.pi/2, np.pi/2+0.3, 0.2):
-        mc.setangle(direction)  
-        time.sleep(0.15) 
+        mc.setangle(direction)
+        time.sleep(0.15)
         print(direction)
 
     # mc.setdir(-180)

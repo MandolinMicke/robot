@@ -59,8 +59,6 @@ class ServoUss():
             mounting (Mounting): a mounting position of the sensor to transform the results
                 Default: central position
 
-            publisher_name (str): if a publishing of the distance should be done
-                Default: None
         Attributes
         ----------
             fov (float): the field of view used for the sensor (max pi)
@@ -79,7 +77,7 @@ class ServoUss():
 
             servo (ServoMotorController): the servo motor controller
 
-            publisher (Network): optional publisher to publish results
+            do_run (bool): boolean to controll the run command
         
         Methods
         -------
@@ -87,7 +85,7 @@ class ServoUss():
 
             run(sweep_angle = np.pi/6,iterations = 0): continiously run short sweeps to track the shortest distance
 
-            set_fov(direction,angle = np.pi/5): sets a short fov based on a direction
+            set_sweep_fov(direction,angle = np.pi/5): sets a short fov based on a direction, for a sweep
 
             set_min_angle(angle): sets the minimum angle for a sweep
 
@@ -98,6 +96,8 @@ class ServoUss():
             sweep(): do a sweep from min to max angle
             
             cleanup(): cleans the gpios
+
+            set_fov(float): sets the maximum fov of the sensor
 
     """
     def __init__(self,
@@ -110,8 +110,7 @@ class ServoUss():
         us_sleep=0.005,
         mean_measurements = 5,
         max_diff_for_new_search = 0.5,
-        mounting=None
-        publisher_name=None):
+        mounting=None):
         """ Initalize the ServoUss
 
         """
@@ -120,25 +119,46 @@ class ServoUss():
         self.servo_sleep = servo_sleep
         self.mean_measurements = mean_measurements
         self.us_sleep =us_sleep
-        self.angleresolution = np.pi/number_of_directions
+        self.set_resolution(number_of_directions)
+        self.do_run = True
 
         if not mounting:
             self.mounting = Mounting(0,0,0)
         # initalize controllers
         self.uss = UltraSoundSensor(ultra_echo,ultra_trigger)
         self.servo = ServoMotorController(servopin)
-        self.publisher = None
-        if publisher_name:
-            self.publisher = Network(pubname = publisher_name)
-            self.publisher.setup_publisher(sensor_distance)
+
         
         # set init values
         self.set_min_angle(-np.pi/2)
-        self.set_max_angle(np.pi/2)     
+        self.set_max_angle(np.pi/2)
         self._present_angle = self.minangle
         self.servo.setangle(self._present_angle)
         
+        # private variables for the runner
+        self._fullsweep = True
+        self._previousdist = 0
+
+    def set_fov(self,fov):
+        """ sets the maximum fov of the sensor to operate
         
+            Parameters
+            ----------
+                fov (float): the angle (0<fov<pi)
+        """
+        if fov > np.pi:
+            self.fov = np.pi
+        else:
+            self.fov = fov
+    def set_resolution(self,number_of_directions):
+        """ set_resolution sets the angular resolution based on the number of directions wanted
+
+            Parameters
+            ----------
+                number_of_directions (int): the number of directions to measure
+
+        """
+        self.angleresolution = np.pi/number_of_directions
 
     def get_dist_from_angle(self,angle=None):
         """ get_dist_from_angle sets a angle of the servo and measures the distance from that position 
@@ -179,32 +199,41 @@ class ServoUss():
         if iterations:
             runinfinite = False
         else:
-            runinfinite = True
-        self.set_fov(0,np.pi)
-        fullsweep = True
-        previousdist = 0
+            runinfinite = self.do_run
+        self.set_sweep_fov(0,np.pi)
+        
         while (runinfinite or it < iterations):
-            ang, dist, std = self.sweep()
-            minindex = dist.index(min(dist))
-            if self.publisher:
-                d,a = self.mounting.transform(dist[minindex],ang[minindex])
-                self.publisher.send(sensor_distance(d,a,std[minindex]))
-            else:
-                print(ang,dist,std)
-            if fullsweep or (abs(previousdist - dist[minindex]) < self.max_diff_for_new_search):
-                fullsweep = False
-                self.set_fov(ang[minindex],sweep_angle)
-                previousdist = dist[minindex]
-            else:
-                print('Lost target, doing full sweep')
-                self.set_fov(0,np.pi)
-                fullsweep = True
-                previousdist = 0
-            
-            time.sleep(self._servo_sleep_time)
+            dist, ang, std = self.do_short_sweep(sweep_angle)
+            print(ang,dist)
             it += 1
 
-    def set_fov(self,direction,angle = np.pi/5):
+    def do_short_sweep(self,sweep_angle):
+        """ It will do a sweep based on sweep_angle, find the closest point set that as the new center and repeat.
+            If it looses it's target, it will do a full sweep (based on fov)
+
+            Returns
+            -------
+                distance (float): the distance to the closest object
+
+                angle (float): the angle to the closest object
+
+                std(float): standard deviation of the distance
+        """
+        ang, dist, std = self.sweep()
+        minindex = dist.index(min(dist))
+        if self._fullsweep or (abs(self._previousdist - dist[minindex]) < self.max_diff_for_new_search):
+            self._fullsweep = False
+            self.set_sweep_fov(ang[minindex],sweep_angle)
+            self._previousdist = dist[minindex]
+        else:
+            # Lost target, next will be a full sweep
+            self.set_sweep_fov(0,np.pi)
+            self._fullsweep = True
+            self._previousdist = 0
+        distance,angle = self.mounting.transform(dist[minindex],ang[minindex])
+        return distance, angle, std[minindex]
+
+    def set_sweep_fov(self,direction,angle = np.pi/5):
         """ sets the fov for a sweep
 
             Parameters
@@ -300,12 +329,15 @@ class ServoUss():
         self.servo.teardown()
 
 if __name__ == "__main__":
-    m = Mounting(-2,0,np.pi)
-    r,a = m.transform(2,-np.pi/2)
-    print(r,a*180/np.pi)
+    # m = Mounting(-2,0,np.pi)
+    # r,a = m.transform(2,-np.pi/2)
+    # print(r,a*180/np.pi)
     
-    # suss = ServoUss(10,9,11)
-    # suss.run(iterations = 100)
+    suss = ServoUss(10,9,11)
+    # suss = ServoUss(17,27,22)
+    # suss = ServoUss(25,8,7)
+    # suss = ServoUss(2,3,4)
+    suss.run(iterations = 50)
     # ang, dist, std = suss.get_min_dist()
     # suss.cleanup()
 
