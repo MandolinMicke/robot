@@ -124,6 +124,8 @@ class ServoUss():
 
         if not mounting:
             self.mounting = Mounting(0,0,0)
+        else:
+            self.mounting = mounting
         # initalize controllers
         self.uss = UltraSoundSensor(ultra_echo,ultra_trigger)
         self.servo = ServoMotorController(servopin)
@@ -333,8 +335,8 @@ if __name__ == "__main__":
     # r,a = m.transform(2,-np.pi/2)
     # print(r,a*180/np.pi)
     
-    suss = ServoUss(10,9,11)
-    # suss = ServoUss(17,27,22)
+    # suss = ServoUss(10,9,11)
+    suss = ServoUss(17,27,22)
     # suss = ServoUss(25,8,7)
     # suss = ServoUss(2,3,4)
     suss.run(iterations = 50)

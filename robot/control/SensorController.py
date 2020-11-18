@@ -54,7 +54,9 @@ class Sensor():
                 self.network.send(coms.sensor_distance(dist,ang,std))
             
             if self.do_one_sweep:
+                print('doing a sweep')
                 self.do_one_sweep = False
+                self.sensor.set_sweep_fov(0,np.pi)
                 ang,dist,std = self.sensor.sweep()
                 for i in range(len(ang)):
                     self.network.send(coms.sensor_distance(dist[i],ang[i],std[i]))
@@ -63,10 +65,10 @@ class Sensor():
     def _communicator(self):
 
         print('running ' + self.pubname + '....')
-        while(self.do_run):
+        while(self.running):
         
             command = self.network.listen()
-            # print(command)
+            print(command)
 
             if command == coms.shutdown():
                 self.do_run = False
@@ -77,11 +79,13 @@ class Sensor():
                 self.sensor.set_resolution(coms.decoder(command))
             elif coms.sensor_mode() in command:
                 mode = coms.decoder(command)
-                if mode == 'closest':
+                if mode == 1:
                     self.do_run = True
-                elif mode == 'full':
+                elif mode == 2:
                     self.do_run = False
                     self.do_one_sweep = True
+            else:
+                print('unknown command')
         
 
     def start(self):
@@ -95,8 +99,12 @@ class Sensor():
         
     
 if __name__ == '__main__':
-    sensor = Sensor('uss1',10,9,11,Mounting(0,0,np.pi/2))
-    sensor.start()
-    sensor.join()
+
+    sensor1 = Sensor('uss1',10,9,11,Mounting(0,5,np.pi/2))
+    sensor2 = Sensor('uss1',17,27,22,Mounting(0,-5,-np.pi/2)))
+    sensor1.start()
+    sensor2.start()
+    sensor1.join()
+    sensor2.join()
     
     
