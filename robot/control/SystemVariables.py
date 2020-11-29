@@ -7,6 +7,7 @@ SELF = "192.168.10.68"
 
 nodes = dict()
 nodes['master'] = [STATION_ADDRESS,8000]
+nodes['master_sim']= [STATION_ADDRESS,8010]
 nodes['joystick'] = [STATION_ADDRESS,8001]
 nodes['own_master'] = [SELF,8000]
 nodes['motor1'] = [SELF,8010]

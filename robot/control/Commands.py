@@ -16,7 +16,6 @@ def shutdown():
 
 
 #### for motor control
-
 def speed(controllername,speed=None):
     basestr = 'speed' + controllername + ':'
     if speed != None:
@@ -60,3 +59,6 @@ def get_uss_subs():
     sensor_resolution(),
     sensor_fov(),
     sensor_mode()]
+
+def get_plotter_subs():
+    return [sensor_distance(), shutdown()]
